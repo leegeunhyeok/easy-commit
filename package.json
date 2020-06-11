@@ -1,0 +1,43 @@
+{
+  "name": "easy-commit",
+  "version": "0.0.1",
+  "description": "Git commit helper",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run build && npm install -g && cm",
+    "build": "rollup --config build/rollup.config.ts"
+  },
+  "bin": {
+    "cm": "./dist/easy-commit.js"
+  },
+  "engines": {
+    "node": ">=10.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leegeunhyeok/easy-commit.git"
+  },
+  "author": "Geunhyeok LEE <dev.ghlee@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/leegeunhyeok/easy-commit/issues"
+  },
+  "homepage": "https://github.com/leegeunhyeok/easy-commit#readme",
+  "dependencies": {
+    "chalk": "^4.0.0",
+    "figlet": "^1.4.0",
+    "inquirer": "^7.1.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-json": "^4.0.3",
+    "@rollup/plugin-node-resolve": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^3.0.1",
+    "@typescript-eslint/parser": "^3.0.1",
+    "eslint": "^7.1.0",
+    "rollup": "^2.10.9",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-license": "^2.1.0",
+    "rollup-plugin-typescript": "^1.0.1",
+    "typescript": "^3.9.3"
+  }
+}
