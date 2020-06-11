@@ -1,0 +1,2 @@
+# cm
+✉️ Commit Message CLI
