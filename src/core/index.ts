@@ -1,14 +1,13 @@
-import os from 'os';
-import fs from 'fs';
-import path from 'path';
 import readline from 'readline';
 import { spawn } from 'child_process';
-import { FlowData, FlowResponseObject, CommandResponse } from '../interface';
+import { FlowData, CommandResponse } from '../interface';
 import { inputType } from '../enum';
 import 'colors';
 
-const TEMP_FOLDER: string = '.easycommit';
-const TEMP_FILE_NAME: string = 'message';
+const MESSAGE = {
+  'SUBJECT_REQUIRE': 'Subject is required.'
+};
+
 const FLOW: Array<FlowData> = [
   {
     type: inputType.SUBJECT,
@@ -24,22 +23,89 @@ const FLOW: Array<FlowData> = [
   }
 ];
 
-class FlowResponseObject {
-  public subject: string = null;
-  private body: Array<string> = [];
+class Defer {
+  private promise: Promise<void> = null;
+  private res: Function = null;
+  private rej: Function = null;
 
-  addBody (bodyMessage: string): void {
-    this.body.push(bodyMessage);
+  constructor () {
+    this.promise = new Promise((resolve, reject) => {
+      this.res = resolve;
+      this.rej = reject;
+    });
   }
 
-  getMessage (): string {
-    return this.subject.cyan.underline +
-           '\n\n' +
-           this.body.join('\n').yellow;
+  public valueOf (): Promise<void> {
+    return this.promise;
+  }
+
+  public resolve (): void {
+    this.res();
+  }
+
+  public reject (e): void {
+    this.rej(e);
   }
 }
 
-export const main = async () => {
+class FlowResponseObject {
+  private subject: string = null;
+  private body: Array<string> = [];
+  private maxLength: number = 0;
+
+  private updateLength (str: string): void {
+    if (this.maxLength < str.length) {
+      this.maxLength = str.length;
+    }
+  }
+
+  public setSubject (subject: string): void {
+    this.subject = subject;
+    this.updateLength(subject);
+  }
+
+  public addBody (bodyMessage: string): void {
+    this.body.push(bodyMessage);
+    this.updateLength(bodyMessage);
+  }
+
+  public getMessage (): string {
+    return this.subject + '\n\n' + this.body.join('\n').trim();
+  }
+
+  public toString (): string {
+    const getPadding = (length: number): string => new Array(length + 1).join(' ');
+    const line = new Array(this.maxLength).fill('─').join('');
+    const top = '┌' + line + '┐';
+    const middle = '├' + line + '┤';
+    const bottom = '└' + line + '┘';
+    const subject = '│' + this.subject + getPadding(this.maxLength - this.subject.length) + '│';
+    const temp = [];
+    
+    let padding = true;
+    this.body.reverse().forEach((message) => {
+      if (message || !padding) {
+        temp.push(message);
+        padding = false;
+      }
+    });
+
+    const body = temp
+      .reverse()
+      .map((message) => '│' + message + getPadding(this.maxLength - message.length) + '│')
+      .join('\n');
+
+    return [
+      top,
+      subject,
+      middle,
+      body,
+      bottom
+    ].join('\n');
+  }
+}
+
+export const main = () => {
   const response: FlowResponseObject = new FlowResponseObject();
   const rl = readline.createInterface({
     input: process.stdin,
@@ -49,50 +115,67 @@ export const main = async () => {
     tabSize: 2
   });
   let running: boolean = true;
+  let subjectPassed: boolean = false;
+  let nextType: inputType = null;
+
+  const defer = new Defer();
 
   const flowGenerator = (function* () {
     const getFirst = () => FLOW.shift();
     let curr = getFirst();
 
+    // Subject (Require)
     while (!(yield curr));
+
+    // Body
     while (running) {
       yield (curr = getFirst() || curr);
     }
   })();
 
-  const ask = (question = ''): void => {
-    if (question) console.log('>'.green.bold, question);
+  const print = (message: string = '', symbol: string='?', color: string='green'): void => {
+    if (message) console.log('\n' + symbol[color].bold, message);
   };
 
   const handler = (line: string = ''): void => {
-    const { done, value } = flowGenerator.next(line);
+    const { value } = flowGenerator.next(line);
+    if (value['type'] === inputType.SUBJECT) {
+      if (subjectPassed) {      
+        print(MESSAGE.SUBJECT_REQUIRE, '!', 'yellow');
+      }
+      subjectPassed = true;
+    }
 
-    if (done) rl.close();
+    print(value['message']);
 
-    ask(value['message']);
-    switch (value['type']) {
+    switch (nextType) {
     case inputType.SUBJECT:
-      response.subject = line;
+      response.setSubject(line);
       break;
 
     case inputType.BODY:
       response.addBody(line);
       break;
     }
+    nextType = value['type'];
   };
 
   const doCommit = (): void => {
-    const commitMessage = response.getMessage();
-    rl.question(commitMessage + '\n\n> Commit? [Y/n]', (answer) => {
+    print('Commit message preview');
+    console.log(response.toString());
+    rl.question('\n>'.green.bold + ' Commit? [Y/n] ', async (answer) => {
       running = false;
       rl.close();
 
       // TODO: Commit
       if (!answer || answer === 'Y' || answer === 'y') {
-        console.log('Yes!');
-      } else {
-        console.log('No!');
+        try {
+          // await command('git', ['commit', '-m', response.getMessage()]);
+        } catch (e) {
+          defer.reject(e['data']);
+        }
       }
+      defer.resolve();
     });
   };
 
@@ -100,6 +183,8 @@ export const main = async () => {
   rl
     .on('line', handler)
     .on('SIGINT', doCommit);
+
+  return defer.valueOf();
 };
 
 /**
