@@ -69,13 +69,14 @@ class FlowResponseObject {
 
   public setSubject (subject: string): void {
     this.isCommitable = true;
-    this.subject = subject;
-    this.updateLength(subject);
+    this.subject = subject.trim();
+    this.updateLength(this.subject);
   }
 
   public addBody (bodyMessage: string): void {
-    this.body.push(bodyMessage);
-    this.updateLength(bodyMessage);
+    const message = bodyMessage.trim();
+    this.body.push(message);
+    this.updateLength(message);
   }
 
   public getMessage (): CommitMessage {
@@ -104,7 +105,7 @@ class FlowResponseObject {
     const subject = '│' + this.subject + getPadding(maxLength - this.subject.length) + '│';
 
     const body = (temp.length ? temp.reverse() : ['(Empty)'['gray']])
-      .map((message) => '│' + message + getPadding(this.maxLength - message.length) + '│')
+      .map((message) => '│' + message + getPadding(maxLength - message.length) + '│')
       .join('\n');
 
     return [
