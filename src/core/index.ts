@@ -1,38 +1,105 @@
-import inquirer from 'inquirer';
+import os from 'os';
+import fs from 'fs';
+import path from 'path';
+import readline from 'readline';
 import { spawn } from 'child_process';
-import { CommandResponse } from '../interface';
+import { FlowData, FlowResponseObject, CommandResponse } from '../interface';
 import { inputType } from '../enum';
+import 'colors';
+
+const TEMP_FOLDER: string = '.easycommit';
+const TEMP_FILE_NAME: string = 'message';
+const FLOW: Array<FlowData> = [
+  {
+    type: inputType.SUBJECT,
+    message: 'Commit message subject'
+  },
+  {
+    type: inputType.BODY,
+    message: 'Commit message body'
+  },
+  {
+    type: inputType.BODY,
+    message: null
+  }
+];
+
+class FlowResponseObject {
+  public subject: string = null;
+  private body: Array<string> = [];
+
+  addBody (bodyMessage: string): void {
+    this.body.push(bodyMessage);
+  }
+
+  getMessage (): string {
+    return this.subject.cyan.underline +
+           '\n\n' +
+           this.body.join('\n').yellow;
+  }
+}
 
 export const main = async () => {
-  const res = await inquirer.prompt([
-    {
-      name: inputType.SUBJECT,
-      message: 'Commit message subject'
-    },
-    {
-      name: inputType.BODY,
-      message: 'Commit message body',
-      type: 'editor'
+  const response: FlowResponseObject = new FlowResponseObject();
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    completer () {}, // TODO: Auto complete tag (UPDATE, FIX etc..)
+    prompt: '',
+    tabSize: 2
+  });
+  let running: boolean = true;
+
+  const flowGenerator = (function* () {
+    const getFirst = () => FLOW.shift();
+    let curr = getFirst();
+
+    while (!(yield curr));
+    while (running) {
+      yield (curr = getFirst() || curr);
     }
-  ]);
+  })();
 
-  const subject = res[inputType.SUBJECT];
-  const body = res[inputType.BODY];
-  const commitMessage = subject + (body ? '\n\n' + body : '');
+  const ask = (question = ''): void => {
+    if (question) console.log('>'.green.bold, question);
+  };
 
-  const confirm = await inquirer.prompt([
-    {
-      name: inputType.CONFIRM,
-      message: `Commit message preview\n${commitMessage}\nConfirm?`,
-      type: 'confirm'
+  const handler = (line: string = ''): void => {
+    const { done, value } = flowGenerator.next(line);
+
+    if (done) rl.close();
+
+    ask(value['message']);
+    switch (value['type']) {
+    case inputType.SUBJECT:
+      response.subject = line;
+      break;
+
+    case inputType.BODY:
+      response.addBody(line);
+      break;
     }
-  ]);
+  };
 
-  if (confirm[inputType.CONFIRM]) {
-    process.exit(0);
-  } else {
-    // TODO: Write commit message as file
-  }
+  const doCommit = (): void => {
+    const commitMessage = response.getMessage();
+    rl.question(commitMessage + '\n\n> Commit? [Y/n]', (answer) => {
+      running = false;
+      rl.close();
+
+      // TODO: Commit
+      if (!answer || answer === 'Y' || answer === 'y') {
+        console.log('Yes!');
+      } else {
+        console.log('No!');
+      }
+    });
+  };
+
+  handler();
+  rl
+    .on('line', handler)
+    .on('SIGINT', doCommit);
 };
 
 /**
@@ -40,7 +107,7 @@ export const main = async () => {
  * @param args Arguments array
  * @return Command execute result
  */
-export const command = (cmd: string, args: Array<string>): Promise<CommandResponse> => {
+const command = (cmd: string, args: Array<string>): Promise<CommandResponse> => {
   return new Promise((resolve, reject) => {
     const c = spawn(cmd, args);
     const res = { data: '', code: -1 };

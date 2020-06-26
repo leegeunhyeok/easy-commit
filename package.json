@@ -24,9 +24,7 @@
   },
   "homepage": "https://github.com/leegeunhyeok/easy-commit#readme",
   "dependencies": {
-    "chalk": "^4.0.0",
-    "figlet": "^1.4.0",
-    "inquirer": "^7.1.0"
+    "colors": "^1.4.0"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^4.0.3",
