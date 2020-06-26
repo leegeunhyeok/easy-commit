@@ -23,6 +23,12 @@
     "url": "https://github.com/leegeunhyeok/easy-commit/issues"
   },
   "homepage": "https://github.com/leegeunhyeok/easy-commit#readme",
+  "keywords": [
+    "git",
+    "commit",
+    "commit-message",
+    "cli"
+  ],
   "dependencies": {
     "colors": "^1.4.0"
   },
