@@ -104,8 +104,18 @@ class FlowResponseObject {
     const bottom = '└' + line + '┘';
     const subject = '│' + this.subject + getPadding(maxLength - this.subject.length) + '│';
 
-    const body = (temp.length ? temp.reverse() : ['(Empty)'['gray']])
-      .map((message) => '│' + message + getPadding(maxLength - message.length) + '│')
+    const isEmpty = !temp.length;
+    const body = (isEmpty ? ['(Empty)'['gray']] : temp.reverse())
+      .map((message) => {
+        return '│' +
+          message +
+          getPadding(
+            isEmpty ?
+              (maxLength - message.length + 10) :// ANSI Color code (EX: \u001b90m)
+              (maxLength - message.length)
+          ) +
+          '│';
+      })
       .join('\n');
 
     return [

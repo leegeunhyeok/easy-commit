@@ -31,6 +31,8 @@ ec
 
 ## Changelog
 
+- `0.1.1`
+  - FIXED: ANSI Color padding (Message preview)
 - `0.1.0`
   - **Change version convention**
   - FIXED: Crash when press `Ctrl + C` without subject
