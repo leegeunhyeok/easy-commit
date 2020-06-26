@@ -59,6 +59,7 @@ class FlowResponseObject {
   private subject: string = null;
   private body: Array<string> = [];
   private maxLength: number = 0;
+  public isCommitable: boolean = false;
 
   private updateLength (str: string): void {
     if (this.maxLength < str.length) {
@@ -67,6 +68,7 @@ class FlowResponseObject {
   }
 
   public setSubject (subject: string): void {
+    this.isCommitable = true;
     this.subject = subject;
     this.updateLength(subject);
   }
@@ -101,7 +103,7 @@ class FlowResponseObject {
     const bottom = '└' + line + '┘';
     const subject = '│' + this.subject + getPadding(maxLength - this.subject.length) + '│';
 
-    const body = (temp.length ? temp.reverse() : ['(Empty)'.gray])
+    const body = (temp.length ? temp.reverse() : ['(Empty)'['gray']])
       .map((message) => '│' + message + getPadding(this.maxLength - message.length) + '│')
       .join('\n');
 
@@ -173,7 +175,7 @@ export const main = () => {
 
   // Execute commit command
   const doCommit = (): void => {
-    if (running) {
+    if (running && response.isCommitable) {
       print('Commit message preview');
       console.log(response.toString());
     } else {
@@ -181,7 +183,7 @@ export const main = () => {
       return;
     }
 
-    rl.question('\n>'.green.bold + ' Commit? [Y/n] ', async (answer) => {
+    rl.question('\n>'['green'].bold + ' Commit? [Y/n] ', async (answer) => {
       rl.close();
       if (!answer || answer === 'Y' || answer === 'y') {
         try {
