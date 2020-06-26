@@ -23,6 +23,10 @@ const FLOW: Array<FlowData> = [
   }
 ];
 
+
+/**
+ * Waiting for Async task
+ */
 class Defer {
   private promise: Promise<void> = null;
   private res: Function = null;
@@ -48,6 +52,9 @@ class Defer {
   }
 }
 
+/**
+ * Commit flow response data object
+ */
 class FlowResponseObject {
   private subject: string = null;
   private body: Array<string> = [];
@@ -77,14 +84,7 @@ class FlowResponseObject {
   }
 
   public toString (): string {
-    const getPadding = (length: number): string => new Array(length + 1).join(' ');
-    const line = new Array(this.maxLength).fill('─').join('');
-    const top = '┌' + line + '┐';
-    const middle = '├' + line + '┤';
-    const bottom = '└' + line + '┘';
-    const subject = '│' + this.subject + getPadding(this.maxLength - this.subject.length) + '│';
     const temp = [];
-    
     let padding = true;
     this.body.reverse().forEach((message) => {
       if (message || !padding) {
@@ -93,7 +93,15 @@ class FlowResponseObject {
       }
     });
 
-    const body = (temp.length ? temp.reverse() : [''])
+    const maxLength = temp.length ? this.maxLength : Math.max(7, this.maxLength);
+    const getPadding = (length: number): string => new Array(Math.max(length + 1, 0)).join(' ');
+    const line = new Array(maxLength).fill('─').join('');
+    const top = '┌' + line + '┐';
+    const middle = '├' + line + '┤';
+    const bottom = '└' + line + '┘';
+    const subject = '│' + this.subject + getPadding(maxLength - this.subject.length) + '│';
+
+    const body = (temp.length ? temp.reverse() : ['(Empty)'.gray])
       .map((message) => '│' + message + getPadding(this.maxLength - message.length) + '│')
       .join('\n');
 
@@ -139,6 +147,7 @@ export const main = () => {
     if (message) console.log('\n' + symbol[color].bold, message);
   };
 
+  // Print message & input handing
   const handler = (line: string = ''): void => {
     const { value } = flowGenerator.next(line);
     if (value['type'] === inputType.SUBJECT) {
@@ -162,6 +171,7 @@ export const main = () => {
     nextType = value['type'];
   };
 
+  // Execute commit command
   const doCommit = (): void => {
     if (running) {
       print('Commit message preview');
@@ -187,6 +197,7 @@ export const main = () => {
     running = false;
   };
 
+  // Readline (User input)
   handler();
   rl
     .on('line', handler)
