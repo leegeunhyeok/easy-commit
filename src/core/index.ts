@@ -62,6 +62,13 @@ class FlowResponseObject {
   public isCommitable: boolean = false;
 
   private updateLength (str: string): void {
+    const len = this.getLength(str);
+    if (this.maxLength < len) {
+      this.maxLength = len;
+    }
+  }
+
+  private getLength (str: string): number {
     let len = 0;
     for (let i = 0; i < str.length; ++i, ++len) {
       // Multibyte character length checking
@@ -69,10 +76,7 @@ class FlowResponseObject {
         ++len;
       }
     }
-
-    if (this.maxLength < len) {
-      this.maxLength = len;
-    }
+    return len;
   }
 
   public setSubject (subject: string): void {
@@ -95,7 +99,7 @@ class FlowResponseObject {
   }
 
   public toString (): string {
-    const temp = [];
+    const temp: Array<string> = [];
     let padding = true;
     this.body.reverse().forEach((message) => {
       if (message || !padding) {
@@ -110,7 +114,9 @@ class FlowResponseObject {
     const top = '┌' + line + '┐';
     const middle = '├' + line + '┤';
     const bottom = '└' + line + '┘';
-    const subject = '│' + this.subject + getPadding(maxLength - this.subject.length) + '│';
+    const subject = '│' + this.subject + getPadding(
+      maxLength - this.getLength(this.subject)
+    ) + '│';
 
     const isEmpty = !temp.length;
     const body = (isEmpty ? ['(Empty)'['gray']] : temp.reverse())
@@ -120,7 +126,7 @@ class FlowResponseObject {
           getPadding(
             isEmpty ?
               (maxLength - message.length + 10) :// ANSI Color code (EX: \u001b90m)
-              (maxLength - message.length)
+              (maxLength - this.getLength(message))
           ) +
           '│';
       })
