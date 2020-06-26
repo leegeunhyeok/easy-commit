@@ -5,11 +5,6 @@ export interface FlowData {
   message: string
 }
 
-export interface FlowResponseObject {
-  subject: string,
-  body: Array<string>
-}
-
 export interface CommandResponse {
   data: string,
   code: number
