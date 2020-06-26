@@ -62,8 +62,16 @@ class FlowResponseObject {
   public isCommitable: boolean = false;
 
   private updateLength (str: string): void {
-    if (this.maxLength < str.length) {
-      this.maxLength = str.length;
+    let len = 0;
+    for (let i = 0; i < str.length; ++i, ++len) {
+      // Multibyte character length checking
+      if (escape(str.charAt(i)).length === 6) {
+        ++len;
+      }
+    }
+
+    if (this.maxLength < len) {
+      this.maxLength = len;
     }
   }
 
