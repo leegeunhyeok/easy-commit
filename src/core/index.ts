@@ -172,10 +172,10 @@ export const main = () => {
 
     rl.question('\n>'.green.bold + ' Commit? [Y/n] ', async (answer) => {
       rl.close();
-      // TODO: Commit
       if (!answer || answer === 'Y' || answer === 'y') {
         try {
-          // await command('git', ['commit', '-m', response.getMessage()]);
+          const { subject, body } = response.getMessage();
+          await command('git', ['commit', '-m', subject, ...(body ? ['-m', body] : [])]);
         } catch (e) {
           defer.reject(e['data']);
         }
