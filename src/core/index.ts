@@ -1,6 +1,6 @@
 import readline from 'readline';
 import { spawn } from 'child_process';
-import { FlowData, CommandResponse } from '../interface';
+import { FlowData, CommitMessage, CommandResponse } from '../interface';
 import { inputType } from '../enum';
 import 'colors';
 
@@ -69,8 +69,11 @@ class FlowResponseObject {
     this.updateLength(bodyMessage);
   }
 
-  public getMessage (): string {
-    return this.subject + '\n\n' + this.body.join('\n').trim();
+  public getMessage (): CommitMessage {
+    return {
+      subject: this.subject,
+      body: this.body.join('\n').trim()
+    };
   }
 
   public toString (): string {
@@ -90,8 +93,7 @@ class FlowResponseObject {
       }
     });
 
-    const body = temp
-      .reverse()
+    const body = (temp.length ? temp.reverse() : [''])
       .map((message) => '│' + message + getPadding(this.maxLength - message.length) + '│')
       .join('\n');
 
@@ -161,12 +163,15 @@ export const main = () => {
   };
 
   const doCommit = (): void => {
-    print('Commit message preview');
-    console.log(response.toString());
-    rl.question('\n>'.green.bold + ' Commit? [Y/n] ', async (answer) => {
-      running = false;
+    if (running) {
+      print('Commit message preview');
+      console.log(response.toString());
       rl.close();
+      return;
+    }
 
+    rl.question('\n>'.green.bold + ' Commit? [Y/n] ', async (answer) => {
+      rl.close();
       // TODO: Commit
       if (!answer || answer === 'Y' || answer === 'y') {
         try {
@@ -177,6 +182,8 @@ export const main = () => {
       }
       defer.resolve();
     });
+
+    running = false;
   };
 
   handler();

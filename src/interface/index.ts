@@ -5,6 +5,11 @@ export interface FlowData {
   message: string
 }
 
+export interface CommitMessage {
+  subject: string,
+  body: string
+}
+
 export interface CommandResponse {
   data: string,
   code: number
