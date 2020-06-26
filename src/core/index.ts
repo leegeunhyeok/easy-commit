@@ -166,6 +166,7 @@ export const main = () => {
     if (running) {
       print('Commit message preview');
       console.log(response.toString());
+    } else {
       rl.close();
       return;
     }
