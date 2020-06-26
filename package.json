@@ -4,11 +4,11 @@
   "description": "Git commit helper",
   "main": "index.js",
   "scripts": {
-    "test": "npm run build && npm install -g && cm",
+    "test": "npm run build && npm install -g && ec",
     "build": "rollup --config build/rollup.config.ts"
   },
   "bin": {
-    "cm": "./dist/easy-commit.js"
+    "ec": "./dist/easy-commit.js"
   },
   "engines": {
     "node": ">=10.3.0"
