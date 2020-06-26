@@ -31,6 +31,8 @@ ec
 
 ## Changelog
 
+- `0.1.2`
+  - FIXED: Multibyte character length checking
 - `0.1.1`
   - FIXED: ANSI Color padding (Message preview)
 - `0.1.0`
