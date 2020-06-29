@@ -5,7 +5,13 @@ import { inputType } from '../enum';
 import 'colors';
 
 const MESSAGE = {
-  'SUBJECT_REQUIRE': 'Subject is required.'
+  'SUBJECT_REQUIRE': 'Subject is required.',
+  'PREVIEW': 'Commit message preview',
+  'EMPTY': '(Empty)',
+  'CONFIRM': 'Commit? [Y/n]',
+  'DONE': 'Done!',
+  'CANCELED': 'Canceled!',
+  'ERROR': 'ERROR!'
 };
 
 const FLOW: Array<FlowData> = [
@@ -119,7 +125,7 @@ class FlowResponseObject {
     ) + '│';
 
     const isEmpty = !temp.length;
-    const body = (isEmpty ? ['(Empty)'['gray']] : temp.reverse())
+    const body = (isEmpty ? [MESSAGE.EMPTY['gray']] : temp.reverse())
       .map((message) => {
         return '│' +
           message +
@@ -201,20 +207,23 @@ export const main = () => {
   // Execute commit command
   const doCommit = (): void => {
     if (running && response.isCommitable) {
-      print('Commit message preview');
+      print(MESSAGE.PREVIEW);
       console.log(response.toString());
     } else {
+      console.log(MESSAGE.CANCELED['yellow']);
       rl.close();
       return;
     }
 
-    rl.question('\n>'['green'].bold + ' Commit? [Y/n] ', async (answer) => {
+    rl.question('\n>'['green'].bold + ' ' + MESSAGE.CONFIRM, async (answer) => {
       rl.close();
       if (!answer || answer === 'Y' || answer === 'y') {
         try {
           const { subject, body } = response.getMessage();
           await command('git', ['commit', '-m', subject, ...(body ? ['-m', body] : [])]);
+          console.log(MESSAGE.DONE['green']);
         } catch (e) {
+          console.log(MESSAGE.ERROR['red']);
           defer.reject(e['data']);
         }
       }
