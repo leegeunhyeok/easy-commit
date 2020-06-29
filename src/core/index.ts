@@ -14,6 +14,8 @@ const MESSAGE = {
   'ERROR': 'ERROR!'
 };
 
+const CONFIRM = ['', 'y', 'Y'];
+
 const FLOW: Array<FlowData> = [
   {
     type: inputType.SUBJECT,
@@ -217,7 +219,7 @@ export const main = () => {
 
     rl.question('\n>'['green'].bold + ' ' + MESSAGE.CONFIRM, async (answer) => {
       rl.close();
-      if (!answer || answer === 'Y' || answer === 'y') {
+      if (CONFIRM.includes(answer)) {
         try {
           const { subject, body } = response.getMessage();
           await command('git', ['commit', '-m', subject, ...(body ? ['-m', body] : [])]);
